@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QMessageBox, QRadioButton, QGroupBox, QButtonGroup
 
 mixer.init()
+font.init()
 
 game = True
 win = display.set_mode((700, 500))
@@ -43,11 +44,42 @@ class Player(GameSprite):
         if keys_pressed[K_DOWN] and self.rect.y < 400:
             self.rect.y += self.speed
 
+class Ball(GameSprite):
+    def __init__(self, player_image, player_x, player_y, width, height, player_speed, player_speed_y):
+        super().__init__(player_image, player_x, player_y, width, height, player_speed)
+        self.speed_x = player_speed
+        self.speed_y = player_speed_y
+    def update(self):
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+        if self.rect.y < 0 or self.rect.y > 500-50:
+            self.speed_y *= -1
+        if sprite.collide_rect(player_l, ball) or sprite.collide_rect(player_r, ball):
+            self.speed_x *= -1.01
+            print(self.speed_x)
+
+lost_font = font.SysFont("Arial", 30)
+lost_font1 = lost_font.render("Игрок 1 выиграл!", 1, (0, 0, 255))
+win_font = font.SysFont("Arial", 30)
+win_font1 = win_font.render('Игрок 2 выиграл!', 1, (255, 0, 0))
 player_l = Player("palka0.png", 30, 5, 50, 125, 5)
 player_r = Player("palka0.png", 620, 365, 50, 125, 5)
+ball = Ball("tennis_ball1.png", 350, 250, 60, 50, 2, 2)
 
 while game:
+    if ball.rect.x > 700:
+        lost_font = font.SysFont("Arial", 30)
+        lost_font1 = lost_font.render("Игрок 1 выиграл!", 1, (0, 0, 255))
+        finish = -1
+    if ball.rect.x < 0:
+        victory_font = font.SysFont("Arial", 30)
+        victory_font1 = victory_font.render('Игрок 2 выиграл!', 1, (255, 0, 0))
+        finish = 1
     win.blit(background, (0, 0))
+    if finish == -1:
+        win.blit(lost_font1, (270,250))
+    if finish == 1:
+        win.blit(victory_font1, (270,250))
     for a in event.get():
         if a.type == QUIT:
             game = False
@@ -55,8 +87,10 @@ while game:
         win.blit(background, (0,0))
         player_l.update_l()
         player_r.update_r()
+        ball.update()
         player_l.reset()
         player_r.reset()
+        ball.reset()
 
     clock.tick(FPS)
     display.update()
